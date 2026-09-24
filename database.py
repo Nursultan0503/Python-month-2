@@ -1,10 +1,8 @@
 import sqlite3
 
-# Название файла базы данных (он будет проигнорирован гитом благодаря .gitignore)
 DB_NAME = "library.db"
 
 def create_table():
-    # Подключаемся к БД (используем менеджер контекста with, чтобы соединение закрывалось само)
     with sqlite3.connect(DB_NAME) as conn:
         conn.execute('''
             CREATE TABLE IF NOT EXISTS books (
@@ -17,23 +15,52 @@ def create_table():
                 number_of_copies INTEGER
             )
         ''')
-        print("Таблица 'books' успешно создана или уже существует.")
+        print("Таблица 'books' готова к работе.")
 
 def insert_books(name, author, publication_year, genre, number_of_pages, number_of_copies):
     with sqlite3.connect(DB_NAME) as conn:
-        # Используем параметризованный запрос (?) для защиты от SQL-инъекций
         conn.execute('''
             INSERT INTO books (name, author, publication_year, genre, number_of_pages, number_of_copies)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (name, author, publication_year, genre, number_of_pages, number_of_copies))
-        print(f"Книга '{name}' успешно добавлена.")
+        print(f"Книга '{name}' добавлена.")
 
-# Блок запуска
+
+# НОВЫЕ ФУНКЦИИ (ДЗ №8)
+
+
+def get_books_by_author(author):
+    with sqlite3.connect(DB_NAME) as conn:
+        # SELECT * означает "выбрать все колонки"
+        cursor = conn.execute('SELECT * FROM books WHERE author = ?', (author,))
+        # fetchall() возвращает список кортежей со всеми найденными записями
+        books = cursor.fetchall()
+        
+        print(f"\n--- Результаты поиска для автора '{author}' ---")
+        if books:
+            for book in books:
+                # book - это кортеж: (id, name, author, year, genre, pages, copies)
+                print(book)
+        else:
+            print("Книги этого автора не найдены.")
+            
+        return books
+
+def delete_book_by_id(book_id):
+    with sqlite3.connect(DB_NAME) as conn:
+        # DELETE FROM удаляет строку, где id совпадает с переданным
+        conn.execute('DELETE FROM books WHERE id = ?', (book_id,))
+        print(f"\n[Успешно] Книга с ID {book_id} была удалена из базы данных.")
+
+
+# БЛОК ЗАПУСКА
+
 if __name__ == "__main__":
-    # 1. Сначала создаем таблицу
+    # 1. Создаем таблицу
     create_table()
-    
-    # 2. Вызываем функцию 10 раз для добавления книг
+
+    # одни и те же 10 книг при перезапуске скрипта!
+    """
     print("\nНачинаем добавление книг:")
     insert_books("1984", "Джордж Оруэлл", 1949, "Антиутопия", 328, 5)
     insert_books("Мастер и Маргарита", "Михаил Булгаков", 1967, "Роман", 480, 12)
@@ -45,3 +72,10 @@ if __name__ == "__main__":
     insert_books("Дюна", "Фрэнк Герберт", 1965, "Научная фантастика", 704, 15)
     insert_books("Гордость и предубеждение", "Джейн Остин", 1813, "Роман", 432, 6)
     insert_books("Основы Python", "Аллен Дауни", 2015, "Программирование", 300, 10)
+    """
+
+    # 2. Проверяем выборку по автору
+    get_books_by_author("Дж. К. Роулинг")
+    
+    # 3. Проверяем удаление по ID (например, удалим книгу с ID 1 - "1984")
+    delete_book_by_id(1)
