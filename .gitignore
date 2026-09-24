@@ -1,1 +1,4 @@
- 
+ # Базы данных SQLite
+*.db
+*.sqlite
+*.sqlite3
